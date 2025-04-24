@@ -5,11 +5,7 @@ import com.propertymanager.entity.Property;
 import java.util.List;
 
 public interface PropertyRepository extends JpaRepository<Property, Long> {
-
-    // Custom queries for better performance
     List<Property> findByAreaIgnoreCase(String area);
-
     List<Property> findByOccupiedTrue();
-
-    Property findTopByOrderByValueAsc();
+    Property findTopByOrderByCurrentValueAsc();
 }
