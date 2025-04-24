@@ -74,3 +74,56 @@ public class PropertyController {
         return new ResponseEntity<>(service.getPropertyCountByManager(name), HttpStatus.OK);
     }
 }
+@RestController
+@RequestMapping("/api/properties")
+public class PropertyController {
+
+    @Autowired
+    private PropertyService propertyService;
+
+    @PostMapping
+    public ResponseEntity<Property> addProperty(@Valid @RequestBody PropertyDto dto) {
+        return new ResponseEntity<>(propertyService.addProperty(dto), HttpStatus.CREATED);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Property> updateProperty(@PathVariable Long id,
+                                                   @Valid @RequestBody PropertyUpdateRequest request) {
+        return ResponseEntity.ok(propertyService.updateProperty(id, request));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Property> getProperty(@PathVariable Long id) {
+        return ResponseEntity.ok(propertyService.getProperty(id));
+    }
+
+    @GetMapping
+    public ResponseEntity<List<Property>> getAllProperties() {
+        return ResponseEntity.ok(propertyService.getAllProperties());
+    }
+
+    @GetMapping("/area/{area}")
+    public ResponseEntity<List<Property>> getPropertiesByArea(@PathVariable String area) {
+        return ResponseEntity.ok(propertyService.getPropertiesByArea(area));
+    }
+
+    @GetMapping("/occupied")
+    public ResponseEntity<List<Property>> getOccupiedProperties() {
+        return ResponseEntity.ok(propertyService.getOccupiedProperties());
+    }
+
+    @GetMapping("/lowest-value")
+    public ResponseEntity<Property> getLowestValueProperty() {
+        return ResponseEntity.ok(propertyService.getLowestValueProperty());
+    }
+
+    @GetMapping("/salary/{managerName}")
+    public ResponseEntity<Double> calculateSalary(@PathVariable String managerName) {
+        return ResponseEntity.ok(propertyService.calculateSalary(managerName));
+    }
+
+    @GetMapping("/manager/{managerName}/count")
+    public ResponseEntity<Long> countPropertiesByManager(@PathVariable String managerName) {
+        return ResponseEntity.ok(propertyService.getPropertyCountByManager(managerName));
+    }
+}
