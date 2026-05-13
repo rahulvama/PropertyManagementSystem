@@ -1,3 +1,4 @@
+
 # 🏠 Property Management System
 
 A Spring Boot application built for the **Arborgold Real Estate Programming Challenge – Interview Round 2**. This project manages properties and property managers, providing CRUD operations and business logic via a RESTful API.
@@ -51,7 +52,7 @@ com.propertymanager
 
 ## 📂 Sample API Endpoints
 
-| Method | Endpoint                                 | Description                        |
+| Method | Endpoint                                | Description                        |
 |--------|------------------------------------------|------------------------------------|
 | POST   | `/api/properties`                        | Add a new property                 |
 | PUT    | `/api/properties/{id}/update`            | Update property value              |
@@ -69,4 +70,6 @@ com.propertymanager
 - All manager-related operations use `name` as the primary key.
 
 ---
+
+💬 Feel free to reach out for any clarifications or walkthrough.
 
