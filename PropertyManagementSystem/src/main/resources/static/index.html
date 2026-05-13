@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Property Management System</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: Arial, sans-serif; background: #f4f4f4; padding: 20px; }
+        h1 { text-align: center; margin-bottom: 20px; color: #333; }
+        .container { max-width: 900px; margin: auto; }
+        .card { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        h2 { margin-bottom: 15px; color: #444; font-size: 18px; }
+        input, select { width: 100%; padding: 8px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
+        button { padding: 10px 20px; background: #333; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
+        button:hover { background: #555; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #eee; }
+        th { background: #333; color: white; }
+        tr:hover { background: #f9f9f9; }
+        .msg { padding: 10px; margin-top: 10px; border-radius: 4px; font-size: 13px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .delete-btn { padding: 4px 10px; background: #dc3545; color: white; border: none; border-radius: 3px; cursor: pointer; font-size: 12px; }
+    </style>
+</head>
+<body>
+<h1>Property Management System</h1>
+<div class="container">
+
+    <!-- Add Property -->
+    <div class="card">
+        <h2>Add New Property</h2>
+        <input type="text" id="propName" placeholder="Property Name" />
+        <input type="text" id="propArea" placeholder="Area" />
+        <input type="number" id="propPrice" placeholder="Rental Price" />
+        <select id="propOccupied">
+            <option value="false">Not Occupied</option>
+            <option value="true">Occupied</option>
+        </select>
+        <input type="text" id="mgrName" placeholder="Manager Name" />
+        <input type="password" id="mgrPass" placeholder="Manager Password" />
+        <button onclick="addProperty()">Add Property</button>
+        <div id="addMsg"></div>
+    </div>
+
+    <!-- All Properties -->
+    <div class="card">
+        <h2>All Properties</h2>
+        <button onclick="loadProperties()">Refresh</button>
+        <br/><br/>
+        <table id="propertyTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Area</th>
+                    <th>Rental Price</th>
+                    <th>Occupied</th>
+                    <th>Manager</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="propertyBody"></tbody>
+        </table>
+    </div>
+
+    <!-- Manager Salary -->
+    <div class="card">
+        <h2>Calculate Manager Salary</h2>
+        <input type="text" id="salaryManager" placeholder="Manager Name" />
+        <button onclick="getSalary()">Calculate</button>
+        <div id="salaryResult"></div>
+    </div>
+
+</div>
+
+<script>
+    const API = 'http://localhost:8080/api/properties';
+
+    async function addProperty() {
+        const dto = {
+            name: document.getElementById('propName').value,
+            area: document.getElementById('propArea').value,
+            rentalPrice: parseFloat(document.getElementById('propPrice').value),
+            occupied: document.getElementById('propOccupied').value === 'true',
+            managerName: document.getElementById('mgrName').value,
+            managerPassword: document.getElementById('mgrPass').value
+        };
+        try {
+            const res = await fetch(API, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(dto)
+            });
+            if (res.ok) {
+                showMsg('addMsg', 'Property added successfully!', 'success');
+                loadProperties();
+            } else {
+                const err = await res.json();
+                showMsg('addMsg', err.error || 'Error adding property', 'error');
+            }
+        } catch (e) {
+            showMsg('addMsg', 'Cannot connect to server', 'error');
+        }
+    }
+
+    async function loadProperties() {
+        try {
+            const res = await fetch(API);
+            const data = await res.json();
+            const tbody = document.getElementById('propertyBody');
+            tbody.innerHTML = '';
+            data.forEach(p => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${p.id}</td>
+                        <td>${p.name}</td>
+                        <td>${p.area}</td>
+                        <td>₹${p.rentalPrice}</td>
+                        <td>${p.occupied ? 'Yes' : 'No'}</td>
+                        <td>${p.manager ? p.manager.name : '-'}</td>
+                        <td><button class="delete-btn" onclick="deleteProperty(${p.id})">Delete</button></td>
+                    </tr>`;
+            });
+        } catch (e) {
+            console.error('Error loading properties');
+        }
+    }
+
+    async function deleteProperty(id) {
+        if (!confirm('Delete this property?')) return;
+        try {
+            const res = await fetch(`${API}/${id}`, { method: 'DELETE' });
+            if (res.ok) loadProperties();
+        } catch (e) {
+            alert('Error deleting property');
+        }
+    }
+
+    async function getSalary() {
+        const name = document.getElementById('salaryManager').value;
+        if (!name) return;
+        try {
+            const res = await fetch(`${API}/manager/${name}/salary`);
+            const salary = await res.json();
+            document.getElementById('salaryResult').innerHTML =
+                `<div class="msg success">Salary for ${name}: ₹${salary.toFixed(2)}</div>`;
+        } catch (e) {
+            document.getElementById('salaryResult').innerHTML =
+                `<div class="msg error">Manager not found</div>`;
+        }
+    }
+
+    function showMsg(id, msg, type) {
+        document.getElementById(id).innerHTML = `<div class="msg ${type}">${msg}</div>`;
+    }
+
+    // Load on page open
+    loadProperties();
+</script>
+</body>
+</html>

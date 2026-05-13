@@ -1,37 +1,34 @@
 package com.propertymanager.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.*;
 
 @Entity
+@Table(name = "properties")
 public class Property {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String address;
+    private String name;
     private String area;
-    private boolean isOccupied;
-    private double value;
+    private double rentalPrice;
+    private boolean occupied;
 
     @ManyToOne
-    @JoinColumn(name = "manager_name")
+    @JoinColumn(name = "manager_id")
     private PropertyManager manager;
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
-    public String getAddress() { return address; }
-    public void setAddress(String address) { this.address = address; }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
     public String getArea() { return area; }
     public void setArea(String area) { this.area = area; }
-    public boolean isOccupied() { return isOccupied; }
-    public void setOccupied(boolean occupied) { isOccupied = occupied; }
-    public double getValue() { return value; }
-    public void setValue(double value) { this.value = value; }
+    public double getRentalPrice() { return rentalPrice; }
+    public void setRentalPrice(double rentalPrice) { this.rentalPrice = rentalPrice; }
+    public boolean isOccupied() { return occupied; }
+    public void setOccupied(boolean occupied) { this.occupied = occupied; }
     public PropertyManager getManager() { return manager; }
     public void setManager(PropertyManager manager) { this.manager = manager; }
 }

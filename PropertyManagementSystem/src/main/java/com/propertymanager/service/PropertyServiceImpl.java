@@ -1,18 +1,16 @@
 package com.propertymanager.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import java.util.*;
-import java.util.stream.Collectors;
-
 import com.propertymanager.dto.PropertyDto;
-import com.propertymanager.dto.PropertyUpdateRequest;
 import com.propertymanager.entity.Property;
 import com.propertymanager.entity.PropertyManager;
 import com.propertymanager.exception.PropertyNotFoundException;
-import com.propertymanager.repository.PropertyRepository;
 import com.propertymanager.repository.PropertyManagerRepository;
+import com.propertymanager.repository.PropertyRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @Transactional
@@ -26,19 +24,18 @@ public class PropertyServiceImpl implements PropertyService {
 
     @Override
     public Property addProperty(PropertyDto dto) {
-        PropertyManager manager = managerRepository.findByName(dto.getManagerName()).orElseGet(() -> {
-            PropertyManager newManager = new PropertyManager();
-            newManager.setName(dto.getManagerName());
-            newManager.setPassword(dto.getManagerPassword());
-            managerRepository.save(newManager);
-            return newManager;
-        });
+        PropertyManager manager = managerRepository.findByName(dto.getManagerName())
+                .orElseGet(() -> {
+                    PropertyManager newManager = new PropertyManager();
+                    newManager.setName(dto.getManagerName());
+                    newManager.setPassword(dto.getManagerPassword());
+                    return managerRepository.save(newManager);
+                });
 
         Property property = new Property();
         property.setName(dto.getName());
         property.setArea(dto.getArea());
         property.setRentalPrice(dto.getRentalPrice());
-        property.setCurrentValue(dto.getCurrentValue());
         property.setOccupied(dto.isOccupied());
         property.setManager(manager);
 
@@ -46,42 +43,29 @@ public class PropertyServiceImpl implements PropertyService {
     }
 
     @Override
-    public Property updateProperty(Long id, PropertyUpdateRequest request) {
-        Property property = propertyRepository.findById(id).orElseThrow(() ->
-                new PropertyNotFoundException("Property not found"));
+    public Property updateProperty(Long id, PropertyDto dto) {
+        Property property = propertyRepository.findById(id)
+                .orElseThrow(() -> new PropertyNotFoundException("Property not found with id: " + id));
 
-        PropertyManager manager = managerRepository.findByName(request.getManagerName()).orElseThrow(() ->
-                new PropertyOperationException("Manager not found or unauthorized", null));
-
-        if (!manager.getPassword().equals(request.getManagerPassword())) {
-            throw new PropertyOperationException("Invalid credentials", null);
-        }
-
-        if (!property.getManager().getName().equals(manager.getName())) {
-            throw new PropertyOperationException("Manager cannot update this property", null);
-        }
-
-        property.setOccupied(request.isOccupied());
-        property.setRentalPrice(request.getRentalPrice());
-        property.setCurrentValue(request.getCurrentValue());
+        property.setName(dto.getName());
+        property.setArea(dto.getArea());
+        property.setRentalPrice(dto.getRentalPrice());
+        property.setOccupied(dto.isOccupied());
 
         return propertyRepository.save(property);
     }
 
     @Override
-    public double calculateSalary(String managerName) {
-        PropertyManager manager = managerRepository.findByName(managerName)
-                .orElseThrow(() -> new PropertyOperationException("Manager not found", null));
-
-        return manager.getProperties().stream()
-                .mapToDouble(Property::getRentalPrice)
-                .sum() * 0.10;
+    public void deleteProperty(Long id) {
+        Property property = propertyRepository.findById(id)
+                .orElseThrow(() -> new PropertyNotFoundException("Property not found with id: " + id));
+        propertyRepository.delete(property);
     }
 
     @Override
     public Property getProperty(Long id) {
-        return propertyRepository.findById(id).orElseThrow(() ->
-                new PropertyNotFoundException("Property not found"));
+        return propertyRepository.findById(id)
+                .orElseThrow(() -> new PropertyNotFoundException("Property not found with id: " + id));
     }
 
     @Override
@@ -100,14 +84,15 @@ public class PropertyServiceImpl implements PropertyService {
     }
 
     @Override
-    public Property getLowestValueProperty() {
-        return propertyRepository.findTopByOrderByCurrentValueAsc();
+    public List<Property> getPropertiesByManager(String managerName) {
+        return propertyRepository.findByManagerName(managerName);
     }
 
     @Override
-    public long getPropertyCountByManager(String managerName) {
-        return managerRepository.findByName(managerName)
-                .map(m -> (long) m.getProperties().size())
-                .orElse(0L);
+    public double calculateManagerSalary(String managerName) {
+        List<Property> properties = propertyRepository.findByManagerName(managerName);
+        return properties.stream()
+                .mapToDouble(Property::getRentalPrice)
+                .sum() * 0.10;
     }
 }
